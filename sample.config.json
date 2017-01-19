@@ -1,0 +1,7 @@
+{
+ "accessory": "IP-Symcon",
+ "name": "Flur Temperatur",
+ "SymconHost": "http://IP:Port",
+"SymconService": "Temperatur"
+
+   }
