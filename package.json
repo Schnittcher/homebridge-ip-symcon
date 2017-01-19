@@ -2,6 +2,7 @@
   "name": "homebridge-ip-symcon",
   "version": "0.1.0",
   "description": "A plugin to connect Siri to IP-Symcon.",
+  "devDependencies": {},
   "main": "index.js",
   "repository": {
     "type": "git",
