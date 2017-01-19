@@ -1,6 +1,6 @@
 {
   "name": "homebridge-ip-symcon",
-  "version": "0.1.4",
+  "version": "0.1.41",
   "description": "A plugin to connect Siri to IP-Symcon.",
   "devDependencies": {
         "request": "^2.65.0"
@@ -17,6 +17,10 @@
     "ips",
     "homebridge-plugin"
   ],
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge": ">=0.2.0"
+  },
   "author": "Kai Schnittcher",
   "license": "ISC",
   "bugs": {
