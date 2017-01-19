@@ -1,23 +1,22 @@
 {
   "name": "homebridge-ip-symcon",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A plugin to connect Siri to IP-Symcon.",
-  "license": "ISC",
-  "keywords": [
-    "homebridge",
-    "symcon",
-    "ip-symcon"
-    "ips"
-  ],
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/Schnittcher/homebridge-ip-symcon.git"
   },
+  "keywords": [
+    "homebridge",
+    "symcon",
+    "ip-symcon",
+    "ips"
+  ],
+  "author": "Kai Schnittcher",
+  "license": "ISC",
   "bugs": {
     "url": "https://github.com/Schnittcher/homebridge-ip-symcon/issues"
   },
-  "engines": {
-    "node": ">=0.12.0",
-    "homebridge": ">=0.2.0"
-  }
+  "homepage": "https://github.com/Schnittcher/homebridge-ip-symcon#readme"
 }
