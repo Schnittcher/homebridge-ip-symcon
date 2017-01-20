@@ -15,6 +15,7 @@ class IPSymcon {
     this.name = config["name"];
     this.host = config["SymconHost"];
     this.SymconService = config["SymconService"];
+    this.Brightness = config["Brightness"] || false // wird noch nicht verwendet
     this.username = config["username"] || ""; // wird noch nicht verwendet
     this.password = config["password"] || ""; // wird noch nicht verwendet
     this.polling = config["polling"] || false; // wird noch nicht verwendet
@@ -22,6 +23,7 @@ class IPSymcon {
     this.StatusURL = this.host + '/hook/siri?action=get';
     this.SetURLOn = this.host + '/hook/siri?action=setOn';
     this.SetURLOff = this.host + '/hook/siri?action=setOff';
+    this.SetURLBrightness = this.host + '/hook/siri?action=setBrightness';
 
     this.log('Device '+ this.name +' initialization succeeded');
     this.informationService = new Service.AccessoryInformation();
@@ -49,6 +51,19 @@ class IPSymcon {
             .getCharacteristic(Characteristic.CurrentRelativeHumidity)
             .on('get', this.getHumidity.bind(this));
         break;
+        case "Licht":
+        this.lightbulbService = new Service.Lightbulb(this.name);
+        this.lightbulbService
+            .getCharacteristic(Characteristic.On)
+            .on('get', this.getLightbulbState.bind(this));
+        if (this.Brightness == true) {
+                  this.lightbulbService
+          				.addCharacteristic(new Characteristic.Brightness())
+          				.on('get', this.getBrightness.bind(this))
+          				.on('set', this.setBrightness.bind(this));
+                }
+        break;
+
     }
     setInterval(this.devicePolling.bind(this), this.pollingTime * 1000);
   }
@@ -147,21 +162,118 @@ class IPSymcon {
     }.bind(this));
   }
 
+  getLightbulbState (callback) {
+    this.log('Getting Lightbulb State...');
+    var url = encodeURI(this.StatusURL + '&device='+ this.name);
+    this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
+      if (error) {
+        this.log('getLightbulbState function failed: %s', error.message);
+        callback(error);
+      } else {
+        var binaryState = parseInt(responseBody);
+      }
+      var powerOn = binaryState > 0;
+      this.data = powerOn;
+      if (this.debug == true) {
+        this.log('Currently Lightbulb State %s', binaryState);
+      }
+      callback(null, powerOn);
+    }.bind(this));
+  }
+
+  setLightbulbState (value, callback, context) {
+    this.log('Set Lightbulb State...');
+    var url
+    if (this.data == 1) {
+      url = encodeURI(this.SetURLOff + "&device="+ this.name)
+    } else {
+      url = encodeURI(this.SetURLOn + '&device='+ this.name)
+    }
+    this.log(url)
+    this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
+      if (error) {
+        this.log('setLightbulbState function failed: %s', error.message)
+        callback(error)
+      } else {
+        var binaryState = parseInt(responseBody)
+        var powerOn = binaryState > 0
+        this.data = powerOn
+        if (this.debug == true) {
+          this.log('Currently Lightbulb State %s', binaryState)
+        }
+      }
+      callback();
+    }.bind(this))
+  }
+
+  getBrightness (callback) {
+    this.log('Getting Brightness...');
+    var url = encodeURI(this.StatusURL + '&device='+ this.name + '&brightness=1');
+    this.log(this.StatusURL + '&device='+ this.name + '&brighness=1');
+    this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
+      if (error) {
+        this.log('getBrightness function failed: %s', error.message);
+        callback(error);
+      } else {
+        var binaryState = parseInt(responseBody.replace(/\D/g,"").substr(1));
+      }
+      var brightness = binaryState;
+      this.data = brightness;
+      if (this.debug == true) {
+        this.log('Currently Brightness %s', binaryState);
+      }
+      callback(null, brightness);
+    }.bind(this));
+  }
+
+
+  setBrightness (level, callback, context) {
+    this.log('Setting Brightness...');
+    var url = encodeURI(this.SetURLBrightness + '&device='+ this.name + '&Intensity=' +level);
+    this.log(this.SetURLBrightness + '&device='+ this.name + '&Intensity=' +level);
+    this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
+      if (error) {
+        this.log('getBrightness function failed: %s', error.message);
+        callback(error);
+      } else {
+        var binaryState = parseInt(responseBody.replace(/\D/g,"").substr(1));
+      }
+      var brightness = binaryState;
+      this.data = brightness;
+      if (this.debug == true) {
+        this.log('Currently Brightness %s', binaryState);
+      }
+      callback(null, brightness);
+    }.bind(this));
+  }
+
   devicePolling () {
     switch (this.SymconService) {
       case "Temperatur":
         this.temperatureService
             .getCharacteristic(Characteristic.CurrentTemperature).getValue();
         break;
-      case "Switch":
-        this.switchService
-            .getCharacteristic(Characteristic.On)
-            .getValue();
+        case "Switch":
+          this.switchService
+              .getCharacteristic(Characteristic.On)
+              .getValue();
         break;
       case "Luftfeuchtigkeit":
         this.humidityService
             .getCharacteristic(Characteristic.CurrentRelativeHumidity)
             .getValue();
+        break;
+      case "Licht":
+      this.lightbulbService
+          .getCharacteristic(Characteristic.On)
+          .getValue();
+        if (this.Brightness == true) {
+          this.lightbulbService
+              .getCharacteristic(Characteristic.Brightness)
+              .getValue();
+        }
+        break;
+
     }
   }
 
@@ -173,6 +285,8 @@ class IPSymcon {
         return [this.informationService, this.switchService]
       case "Luftfeuchtigkeit":
         return [this.informationService, this.humidityService]
+      case "Licht":
+        return [this.informationService, this.lightbulbService]
     }
   }
 }
