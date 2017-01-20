@@ -11,7 +11,7 @@ module.exports = function(homebridge){
 class IPSymcon {
   constructor (log, config) {
     this.log = log;
-    //this.debug = config["debug"] || false;
+    this.debug = config["debug"] || false;
     this.name = config["name"];
     this.host = config["SymconHost"];
     this.SymconService = config["SymconService"];
@@ -43,6 +43,12 @@ class IPSymcon {
             .on('set', this.setSwitchState.bind(this))
             .on('get', this.getSwitchState.bind(this))
         break;
+        case "Luftfeuchtigkeit":
+        this.humidityService = new Service.HumiditySensor(this.name);
+        this.humidityService
+            .getCharacteristic(Characteristic.CurrentRelativeHumidity)
+            .on('get', this.getHumidity.bind(this));
+        break;
     }
     setInterval(this.devicePolling.bind(this), this.pollingTime * 1000);
   }
@@ -73,7 +79,9 @@ class IPSymcon {
       } else {
         var temperature = parseFloat(responseBody);
       }
-      this.log('Currently Temperature %s', temperature);
+      if (this.debug == true) {
+        this.log('Currently Temperature %s', temperature);
+      }
       callback(null, temperature);
     }.bind(this));
   }
@@ -90,7 +98,9 @@ class IPSymcon {
       }
       var powerOn = binaryState > 0;
       this.data = powerOn;
-      this.log('Currently State %s', binaryState);
+      if (this.debug == true) {
+        this.log('Currently State %s', binaryState);
+      }
       callback(null, powerOn);
     }.bind(this));
   }
@@ -112,10 +122,29 @@ class IPSymcon {
         var binaryState = parseInt(responseBody)
         var powerOn = binaryState > 0
         this.data = powerOn
-        this.log('Currently State %s', binaryState)
+        if (this.debug == true) {
+          this.log('Currently State %s', binaryState)
+        }
       }
       callback();
     }.bind(this))
+  }
+
+  getHumidity (callback) {
+    this.log('Getting Humidity...');
+    var url = encodeURI(this.StatusURL + '&device='+ this.name);
+    this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
+      if (error) {
+        this.log('HTTP getHumidity failed: %s', error.message);
+        callback(error);
+      } else {
+        var humidity = parseFloat(responseBody);
+      }
+      if (this.debug == true) {
+        this.log('Currently Humidity %s', humidity);
+      }
+      callback(null, humidity);
+    }.bind(this));
   }
 
   devicePolling () {
@@ -129,6 +158,10 @@ class IPSymcon {
             .getCharacteristic(Characteristic.On)
             .getValue();
         break;
+      case "Luftfeuchtigkeit":
+        this.humidityService
+            .getCharacteristic(Characteristic.CurrentRelativeHumidity)
+            .getValue();
     }
   }
 
@@ -138,6 +171,8 @@ class IPSymcon {
         return [this.informationService, this.temperatureService]
       case "Switch":
         return [this.informationService, this.switchService]
+      case "Luftfeuchtigkeit":
+        return [this.informationService, this.humidityService]
     }
   }
 }
