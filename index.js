@@ -55,7 +55,8 @@ class IPSymcon {
         this.lightbulbService = new Service.Lightbulb(this.name);
         this.lightbulbService
             .getCharacteristic(Characteristic.On)
-            .on('get', this.getLightbulbState.bind(this));
+            .on('get', this.getLightbulbState.bind(this))
+            .on('set', this.setLightbulbState.bind(this));
         if (this.Brightness == true) {
                   this.lightbulbService
           				.addCharacteristic(new Characteristic.Brightness())
@@ -92,7 +93,7 @@ class IPSymcon {
         this.log('HTTP get power function failed: %s', error.message);
         callback(error);
       } else {
-        var temperature = parseFloat(responseBody);
+        var temperature = parseFloat(responseBody.replace(",","."));
       }
       if (this.debug == true) {
         this.log('Currently Temperature %s', temperature);
