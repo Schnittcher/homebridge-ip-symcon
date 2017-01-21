@@ -24,11 +24,11 @@ Bei pollingTime wird die Zeit in Sekunden angegeben, in der das Gerät abgefragt
 Debug kann gesetzt werden, dann gibt es mehr Einträge im Log, wenn der Wert nicht gesetzt wird, steht er automatisch auf false.
 
 * Möglichkeiten für den SymconService wären zur Zeit:
-           * Temperatur
-           * Switch
-           * Luftfeuchtigkeitssensor
-           * Luftfeuchtigkeitssensor
-           * Lightbulb mit Dimmer
+   * Temperatur
+   * Switch
+   * Luftfeuchtigkeitssensor
+   * Luftfeuchtigkeitssensor
+   * Lightbulb mit Dimmer
 
 In IP-Symcon muss ein Hook (https://www.symcon.de/service/dokumentation/modulreferenz/webhook-control/) angelegt werden.
 Der Hook muss "siri" heißen.
