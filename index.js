@@ -456,6 +456,17 @@ var HeatingCoolingState;
               .getValue();
         }
         break;
+        case "Thermostat":
+        this.ThermostatService
+            .getCharacteristic(Characteristic.CurrentTemperature)
+            .getValue();
+        this.ThermostatService
+            .getCharacteristic(Characteristic.TargetHeatingCoolingState)
+            .getValue();
+        this.ThermostatService
+            .getCharacteristic(Characteristic.TargetTemperature)
+            .getValue();
+        break;
 
     }
   }
