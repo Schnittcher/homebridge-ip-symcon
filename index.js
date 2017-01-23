@@ -174,7 +174,7 @@ class IPSymcon {
         var binaryState = parseInt(responseBody);
       }
       var powerOn = binaryState > 0;
-      this.data = powerOn;
+      this.power = powerOn;
       if (this.debug == true) {
         this.log('Currently Lightbulb State %s', binaryState);
       }
@@ -185,7 +185,8 @@ class IPSymcon {
   setLightbulbState (value, callback, context) {
     this.log('Set Lightbulb State...');
     var url
-    if (this.data == 1) {
+    this.log(this.power)
+    if (this.power == 1) {
       url = encodeURI(this.SetURLOff + "&device="+ this.name)
     } else {
       url = encodeURI(this.SetURLOn + '&device='+ this.name)
@@ -198,7 +199,7 @@ class IPSymcon {
       } else {
         var binaryState = parseInt(responseBody)
         var powerOn = binaryState > 0
-        this.data = powerOn
+        this.power = powerOn
         if (this.debug == true) {
           this.log('Currently Lightbulb State %s', binaryState)
         }
