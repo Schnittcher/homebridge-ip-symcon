@@ -19,6 +19,7 @@ class IPSymcon {
     this.username = config["username"] || ""; // wird noch nicht verwendet
     this.password = config["password"] || ""; // wird noch nicht verwendet
     this.polling = config["polling"] || false; // wird noch nicht verwendet
+    this.ThermostatDisplayUnit = config["ThermostatDisplayUnit"] || 0; // 0 = Celsius 1 = Fahrenheit
     this.pollingTime = config["pollingTime"] || 5;
     this.StatusURL = this.host + '/hook/siri?action=get';
     this.SetURLOn = this.host + '/hook/siri?action=setOn';
@@ -64,7 +65,32 @@ class IPSymcon {
           				.on('set', this.setBrightness.bind(this));
                 }
         break;
-
+        case "Thermostat":
+        this.ThermostatService = new Service.Thermostat(this.name);
+        // Aktueller Modus
+        this.ThermostatService
+            .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
+            .on('get', this.getCurrentHeatingCoolingState.bind(this));
+        // Ziel Modus
+        this.ThermostatService
+            .getCharacteristic(Characteristic.TargetHeatingCoolingState)
+            .on('get', this.getTargetHeatingCoolingState.bind(this))
+            .on('set', this.setTargetHeatingCoolingState.bind(this));
+        // Aktuelle Temperatur
+        this.ThermostatService
+            .getCharacteristic(Characteristic.CurrentTemperature)
+            .on('get', this.getCurrentTemperature.bind(this));
+        // Ziel Temperatur
+        this.ThermostatService
+            .getCharacteristic(Characteristic.TargetTemperature)
+            .on('get', this.getTargetTemperature.bind(this))
+            .on('set', this.setTargetTemperature.bind(this));
+        // Celsius oder Fahrenheit
+        this.ThermostatService
+            .getCharacteristic(Characteristic.TemperatureDisplayUnits)
+            .on('get', this.getTemperatureDisplayUnits.bind(this))
+            .on('set', this.setTemperatureDisplayUnits.bind(this));
+        break;
     }
     setInterval(this.devicePolling.bind(this), this.pollingTime * 1000);
   }
