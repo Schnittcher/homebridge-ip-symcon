@@ -25,6 +25,7 @@ class IPSymcon {
     this.SetURLOn = this.host + '/hook/siri?action=setOn';
     this.SetURLOff = this.host + '/hook/siri?action=setOff';
     this.SetURLBrightness = this.host + '/hook/siri?action=setBrightness';
+    this.SetURLThermostat = this.host + '/hook/siri?action=setThermostat';
 
     this.log('Device '+ this.name +' initialization succeeded');
     this.informationService = new Service.AccessoryInformation();
@@ -274,6 +275,79 @@ class IPSymcon {
       callback(null, brightness);
     }.bind(this));
   }
+
+  // Thermostat
+  // TemperatureDisplayUnits
+  getTemperatureDisplayUnits(callback) {
+    callback(null, this.TemperatureDisplayUnits)
+  }
+
+  setTemperatureDisplayUnits (value, callback, context) {
+    this.TemperatureDisplayUnits = value;
+    var error = null;
+    callback(error);
+  }
+
+  getCurrentHeatingCoolingState (callback) {
+    this.log('Getting Current Heating Cooling State...');
+    var url = encodeURI(this.StatusURL + '&device='+ this.name + '&CurrentHeatingCoolingState=1');
+    this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
+      if (error) {
+        this.log('HTTP getCurrentHeatingCoolingState function failed: %s', error.message);
+        callback(error);
+      } else {
+        var HeatingCoolingState = parseInt(responseBody);
+        this.CurrentHeatingCoolingState = state;
+        this.ThermostatService.setCharacteristic(Characteristic.CurrentHeatingCoolingState, this.CurrentHeatingCoolingState);
+      }
+      if (this.debug == true) {
+        this.log('Currently HeatingCoolingState %s', HeatingCoolingState);
+      }
+      callback(null, HeatingCoolingState);
+    }.bind(this));
+  }
+
+
+  getTargetHeatingCoolingState (callback) {
+    this.log('Getting Target Heating Cooling State...');
+    var url = encodeURI(this.StatusURL + '&device='+ this.name + '&TargetHeatingCoolingState=1');
+    this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
+      if (error) {
+        this.log('HTTP getTargetHeatingCoolingState function failed: %s', error.message);
+        callback(error);
+      } else {
+        var HeatingCoolingState = parseInt(responseBody);
+        this.CurrentHeatingCoolingState = state;
+        this.ThermostatService.setCharacteristic(Characteristic.CurrentHeatingCoolingState, this.CurrentHeatingCoolingState);
+      }
+      if (this.debug == true) {
+        this.log('Currently HeatingCoolingState %s', HeatingCoolingState);
+      }
+      callback(null, HeatingCoolingState);
+    }.bind(this));
+  }
+
+
+  setTargetHeatingCoolingState (state, callback, context) {
+    this.log('Setting Current Heating Cooling...');
+    var url = encodeURI(this.SetURLThermostat + '&device='+ this.name + '&State=' +state);
+    this.log(this.SetURLBrightness + '&device='+ this.name + '&Intensity=' +level);
+    this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
+      if (error) {
+        this.log('setTargetHeatingCoolingState function failed: %s', error.message);
+        callback(error);
+      } else {
+        var binaryState = parseInt(responseBody);
+      }
+      var state = binaryState;
+      this.TargetHeatingCoolingState = state;
+      if (this.debug == true) {
+        this.log('Currently Current Heating Cooling %s', binaryState);
+      }
+      callback(null, state);
+    }.bind(this));
+  }
+
 
   devicePolling () {
     switch (this.SymconService) {
