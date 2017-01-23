@@ -26,6 +26,9 @@ class IPSymcon {
     this.SetURLOff = this.host + '/hook/siri?action=setOff';
     this.SetURLBrightness = this.host + '/hook/siri?action=setBrightness';
     this.SetURLThermostat = this.host + '/hook/siri?action=setThermostat';
+    this.ThermostatValueOff = config["ThermostatValueOff"]//
+    this.ThermostatValueHeat = config["ThermostatValueHeat"]//
+    this.ThermostatValueCool = config["ThermostatValueCool"]//
 
     this.log('Device '+ this.name +' initialization succeeded');
     this.informationService = new Service.AccessoryInformation();
@@ -297,7 +300,7 @@ class IPSymcon {
         callback(error);
       } else {
         var HeatingCoolingState = parseInt(responseBody);
-        this.CurrentHeatingCoolingState = state;
+        this.CurrentHeatingCoolingState = HeatingCoolingState;
         this.ThermostatService.setCharacteristic(Characteristic.CurrentHeatingCoolingState, this.CurrentHeatingCoolingState);
       }
       if (this.debug == true) {
@@ -316,8 +319,20 @@ class IPSymcon {
         this.log('HTTP getTargetHeatingCoolingState function failed: %s', error.message);
         callback(error);
       } else {
-        var HeatingCoolingState = parseInt(responseBody);
-        this.CurrentHeatingCoolingState = state;
+        var state = parseInt(responseBody);
+        var HeatingCoolingState;
+            switch (state) {
+              case this.ThermostatValueOff:
+              HeatingCoolingState = 0;
+              break;
+              case this.ThermostatValueHeat:
+              HeatingCoolingState = 1;
+              break;
+              case this.ThermostatValueCool:
+              HeatingCoolingState = 2;
+              break;
+            }
+        this.CurrentHeatingCoolingState = HeatingCoolingState;
         this.ThermostatService.setCharacteristic(Characteristic.CurrentHeatingCoolingState, this.CurrentHeatingCoolingState);
       }
       if (this.debug == true) {
@@ -327,11 +342,23 @@ class IPSymcon {
     }.bind(this));
   }
 
-
   setTargetHeatingCoolingState (state, callback, context) {
-    this.log('Setting Current Heating Cooling...');
-    var url = encodeURI(this.SetURLThermostat + '&device='+ this.name + '&State=' +state);
-    this.log(this.SetURLBrightness + '&device='+ this.name + '&Intensity=' +level);
+
+var HeatingCoolingState;
+    switch (state) {
+      case 0:
+      HeatingCoolingState = this.ThermostatValueOff;
+      break;
+      case 1:
+      HeatingCoolingState = this.ThermostatValueHeat;
+      break;
+      case 2:
+      HeatingCoolingState = this.ThermostatValueCool;
+      break;
+    }
+    this.log('Setting Current Heating Cooling...'+ state);
+    var url = encodeURI(this.SetURLThermostat + '&device='+ this.name + '&State=' +HeatingCoolingState);
+    this.log(url);
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
         this.log('setTargetHeatingCoolingState function failed: %s', error.message);
@@ -348,6 +375,60 @@ class IPSymcon {
     }.bind(this));
   }
 
+  getCurrentTemperature (callback) {
+    this.log('Getting Current Temperature...');
+    var url = encodeURI(this.StatusURL + '&device='+ this.name + '&CurrentTemperature=1');
+    this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
+      if (error) {
+        this.log('HTTP getCurrentTemperature function failed: %s', error.message);
+        callback(error);
+      } else {
+        var temperature = parseFloat(responseBody.replace(",","."));
+      }
+      if (this.debug == true) {
+        this.log('Currently Temperature %s', temperature);
+      }
+      callback(null, temperature);
+    }.bind(this));
+  }
+
+  getTargetTemperature (callback) {
+    this.log('Getting Target Temperature...');
+    var url = encodeURI(this.StatusURL + '&device='+ this.name + '&TargetTemperature=1');
+    this.log(url);
+    this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
+      if (error) {
+        this.log('HTTP getTargetTemperature function failed: %s', error.message);
+        callback(error);
+      } else {
+        var temperature = parseFloat(responseBody.replace(",","."));
+      }
+      if (this.debug == true) {
+        this.log('Target Temperature %s', temperature);
+      }
+      callback(null, temperature);
+    }.bind(this));
+  }
+
+  setTargetTemperature (state, callback, context) {
+    this.log('Setting Target Temperature...');
+    var url = encodeURI(this.SetURLThermostat + '&device='+ this.name + '&TargetTemperature=' +state);
+    this.log(url);
+    this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
+      if (error) {
+        this.log('setTargetTemperature function failed: %s', error.message);
+        callback(error);
+      } else {
+        var binaryState = parseInt(responseBody);
+      }
+      var state = binaryState;
+      this.TargetTemperature = state;
+      if (this.debug == true) {
+        this.log('Currently Current Heating Cooling %s', binaryState);
+      }
+      callback(null, state);
+    }.bind(this));
+  }
 
   devicePolling () {
     switch (this.SymconService) {
@@ -389,6 +470,8 @@ class IPSymcon {
         return [this.informationService, this.humidityService]
       case "Licht":
         return [this.informationService, this.lightbulbService]
+      case "Thermostat":
+        return [this.informationService, this.ThermostatService]
     }
   }
 }
