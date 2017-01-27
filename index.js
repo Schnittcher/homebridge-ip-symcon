@@ -29,6 +29,7 @@ class IPSymcon {
     this.ThermostatValueOff = config["ThermostatValueOff"]//
     this.ThermostatValueHeat = config["ThermostatValueHeat"]//
     this.ThermostatValueCool = config["ThermostatValueCool"]//
+    this.URL = this.host + '/hook/siri';
 
     this.log('Device '+ this.name +' initialization succeeded');
     this.informationService = new Service.AccessoryInformation();
@@ -50,12 +51,12 @@ class IPSymcon {
             .on('set', this.setSwitchState.bind(this))
             .on('get', this.getSwitchState.bind(this))
         break;
-        case "Luftfeuchtigkeit":
-        this.humidityService = new Service.HumiditySensor(this.name);
-        this.humidityService
-            .getCharacteristic(Characteristic.CurrentRelativeHumidity)
-            .on('get', this.getHumidity.bind(this));
-        break;
+        //case "Luftfeuchtigkeit":
+        //this.humidityService = new Service.HumiditySensor(this.name);
+        //this.humidityService
+        //    .getCharacteristic(Characteristic.CurrentRelativeHumidity)
+        //    .on('get', this.getHumidity.bind(this));
+        //break;
         case "Licht":
         this.lightbulbService = new Service.Lightbulb(this.name);
         this.lightbulbService
@@ -118,6 +119,8 @@ class IPSymcon {
   getTemperature (callback) {
     this.log('Getting Temperature...');
     var url = encodeURI(this.StatusURL + '&device='+ this.name);
+    url = encodeURI(this.URL + '?service=Temperatur&device='+this.name+'&get=Temperatur');
+    this.log(url);
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
         this.log('HTTP get power function failed: %s', error.message);
@@ -135,6 +138,8 @@ class IPSymcon {
   getSwitchState (callback) {
     this.log('Getting Switch State...');
     var url = encodeURI(this.StatusURL + '&device='+ this.name);
+    url = encodeURI(this.URL + '?service=Switch&device='+this.name+'&get=State');
+    this.log(url);
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
         this.log('getSwitchState function failed: %s', error.message);
@@ -142,8 +147,10 @@ class IPSymcon {
       } else {
         var binaryState = parseInt(responseBody);
       }
+      this.log(binaryState);
       var powerOn = binaryState > 0;
-      this.data = powerOn;
+      this.SwitchState = powerOn;
+      this.log(this.SwitchState);
       if (this.debug == true) {
         this.log('Currently State %s', binaryState);
       }
@@ -154,10 +161,13 @@ class IPSymcon {
   setSwitchState (value, callback, context) {
     this.log('Set Switch State...');
     var url
-    if (this.data == 1) {
+    this.log(this.SwitchState);
+    if (this.SwitchState == true) {
       url = encodeURI(this.SetURLOff + "&device="+ this.name)
+      url = encodeURI(this.URL + '?service=Switch&device='+this.name+'&set=State&value=0');
     } else {
       url = encodeURI(this.SetURLOn + '&device='+ this.name)
+      url = encodeURI(this.URL + '?service=Switch&device='+this.name+'&set=State&value=1');
     }
     this.log(url)
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
@@ -166,8 +176,9 @@ class IPSymcon {
         callback(error)
       } else {
         var binaryState = parseInt(responseBody)
+this.log("test" + url);
         var powerOn = binaryState > 0
-        this.data = powerOn
+        this.SwitchState = powerOn
         if (this.debug == true) {
           this.log('Currently State %s', binaryState)
         }
@@ -179,6 +190,7 @@ class IPSymcon {
   getHumidity (callback) {
     this.log('Getting Humidity...');
     var url = encodeURI(this.StatusURL + '&device='+ this.name);
+    //url = encodeURI(this.URL + )
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
         this.log('HTTP getHumidity failed: %s', error.message);
@@ -196,6 +208,7 @@ class IPSymcon {
   getLightbulbState (callback) {
     this.log('Getting Lightbulb State...');
     var url = encodeURI(this.StatusURL + '&device='+ this.name);
+    url = encodeURI(this.URL + '?service=Lightbulb&device='+this.name+'&get=State')
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
         this.log('getLightbulbState function failed: %s', error.message);
@@ -204,9 +217,10 @@ class IPSymcon {
         var binaryState = parseInt(responseBody);
       }
       var powerOn = binaryState > 0;
-      this.power = powerOn;
+      this.power = binaryState;
       if (this.debug == true) {
         this.log('Currently Lightbulb State %s', binaryState);
+        this.log(url);
       }
       callback(null, powerOn);
     }.bind(this));
@@ -215,11 +229,12 @@ class IPSymcon {
   setLightbulbState (value, callback, context) {
     this.log('Set Lightbulb State...');
     var url
-    this.log(this.power)
     if (this.power == 1) {
       url = encodeURI(this.SetURLOff + "&device="+ this.name)
+      url = encodeURI(this.URL + '?service=Lightbulb&device='+this.name+'&set=State&value=0')
     } else {
       url = encodeURI(this.SetURLOn + '&device='+ this.name)
+      url = encodeURI(this.URL + '?service=Lightbulb&device='+this.name+'&set=State&value=1')
     }
     this.log(url)
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
@@ -241,18 +256,19 @@ class IPSymcon {
   getBrightness (callback) {
     this.log('Getting Brightness...');
     var url = encodeURI(this.StatusURL + '&device='+ this.name + '&brightness=1');
-    this.log(this.StatusURL + '&device='+ this.name + '&brighness=1');
+    url = encodeURI(this.URL + '?service=Lightbulb&device='+this.name+'&get=Brightness')
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
         this.log('getBrightness function failed: %s', error.message);
         callback(error);
       } else {
-        var binaryState = parseInt(responseBody.replace(/\D/g,"").substr(1));
+        var binaryState = parseInt(responseBody.replace(/\D/g,"")); // .substr(1)
       }
       var brightness = binaryState;
       this.data = brightness;
       if (this.debug == true) {
         this.log('Currently Brightness %s', binaryState);
+        this.log(url);
       }
       callback(null, brightness);
     }.bind(this));
@@ -262,6 +278,7 @@ class IPSymcon {
   setBrightness (level, callback, context) {
     this.log('Setting Brightness...');
     var url = encodeURI(this.SetURLBrightness + '&device='+ this.name + '&Intensity=' +level);
+    url = encodeURI(this.URL + '?service=Lightbulb&device='+this.name+'&set=Brightness&value='+level)
     this.log(this.SetURLBrightness + '&device='+ this.name + '&Intensity=' +level);
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
@@ -275,7 +292,7 @@ class IPSymcon {
       if (this.debug == true) {
         this.log('Currently Brightness %s', binaryState);
       }
-      callback(null, brightness);
+      callback();
     }.bind(this));
   }
 
@@ -294,6 +311,7 @@ class IPSymcon {
   getCurrentHeatingCoolingState (callback) {
     this.log('Getting Current Heating Cooling State...');
     var url = encodeURI(this.StatusURL + '&device='+ this.name + '&CurrentHeatingCoolingState=1');
+    url = encodeURI(this.URL + '?service=Thermostat&device='+this.name+'&get=CurrentHeatingCoolingState')
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
         this.log('HTTP getCurrentHeatingCoolingState function failed: %s', error.message);
@@ -314,6 +332,7 @@ class IPSymcon {
   getTargetHeatingCoolingState (callback) {
     this.log('Getting Target Heating Cooling State...');
     var url = encodeURI(this.StatusURL + '&device='+ this.name + '&TargetHeatingCoolingState=1');
+    url = encodeURI(this.URL + '?service=Thermostat&device='+this.name+'&get=TargetHeatingCoolingState')
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
         this.log('HTTP getTargetHeatingCoolingState function failed: %s', error.message);
@@ -358,6 +377,7 @@ var HeatingCoolingState;
     }
     this.log('Setting Current Heating Cooling...'+ state);
     var url = encodeURI(this.SetURLThermostat + '&device='+ this.name + '&State=' +HeatingCoolingState);
+    url = encodeURI(this.URL + '?service=Thermostat&device='+this.name+'&set=HeatingCoolingState&value=' + HeatingCoolingState)
     this.log(url);
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
@@ -378,6 +398,7 @@ var HeatingCoolingState;
   getCurrentTemperature (callback) {
     this.log('Getting Current Temperature...');
     var url = encodeURI(this.StatusURL + '&device='+ this.name + '&CurrentTemperature=1');
+    url = encodeURI(this.URL + '?service=Thermostat&device='+this.name+'&get=CurrentTemperature')
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
         this.log('HTTP getCurrentTemperature function failed: %s', error.message);
@@ -395,6 +416,7 @@ var HeatingCoolingState;
   getTargetTemperature (callback) {
     this.log('Getting Target Temperature...');
     var url = encodeURI(this.StatusURL + '&device='+ this.name + '&TargetTemperature=1');
+    url = encodeURI(this.URL + '?service=Thermostat&device='+this.name+'&get=TargetTemperature')
     this.log(url);
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
@@ -413,6 +435,7 @@ var HeatingCoolingState;
   setTargetTemperature (state, callback, context) {
     this.log('Setting Target Temperature...');
     var url = encodeURI(this.SetURLThermostat + '&device='+ this.name + '&TargetTemperature=' +state);
+    url = encodeURI(this.URL + '?service=Thermostat&device='+this.name+'&set=TargetTemperature&value=' + state)
     this.log(url);
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
@@ -441,11 +464,11 @@ var HeatingCoolingState;
               .getCharacteristic(Characteristic.On)
               .getValue();
         break;
-      case "Luftfeuchtigkeit":
-        this.humidityService
-            .getCharacteristic(Characteristic.CurrentRelativeHumidity)
-            .getValue();
-        break;
+      //case "Luftfeuchtigkeit":
+      //  this.humidityService
+      //      .getCharacteristic(Characteristic.CurrentRelativeHumidity)
+      //      .getValue();
+      //  break;
       case "Licht":
       this.lightbulbService
           .getCharacteristic(Characteristic.On)
@@ -477,8 +500,8 @@ var HeatingCoolingState;
         return [this.informationService, this.temperatureService]
       case "Switch":
         return [this.informationService, this.switchService]
-      case "Luftfeuchtigkeit":
-        return [this.informationService, this.humidityService]
+      //case "Luftfeuchtigkeit":
+      //  return [this.informationService, this.humidityService]
       case "Licht":
         return [this.informationService, this.lightbulbService]
       case "Thermostat":
