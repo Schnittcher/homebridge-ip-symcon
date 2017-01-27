@@ -500,8 +500,8 @@ var HeatingCoolingState;
         return [this.informationService, this.temperatureService]
       case "Switch":
         return [this.informationService, this.switchService]
-      //case "Luftfeuchtigkeit":
-      //  return [this.informationService, this.humidityService]
+      case "Luftfeuchtigkeit":
+        return [this.informationService, this.humidityService]
       case "Licht":
         return [this.informationService, this.lightbulbService]
       case "Thermostat":
