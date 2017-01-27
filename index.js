@@ -51,12 +51,12 @@ class IPSymcon {
             .on('set', this.setSwitchState.bind(this))
             .on('get', this.getSwitchState.bind(this))
         break;
-        //case "Luftfeuchtigkeit":
-        //this.humidityService = new Service.HumiditySensor(this.name);
-        //this.humidityService
-        //    .getCharacteristic(Characteristic.CurrentRelativeHumidity)
-        //    .on('get', this.getHumidity.bind(this));
-        //break;
+      case "Luftfeuchtigkeit":
+        this.humidityService = new Service.HumiditySensor(this.name);
+        this.humidityService
+            .getCharacteristic(Characteristic.CurrentRelativeHumidity)
+            .on('get', this.getHumidity.bind(this));
+        break;
         case "Licht":
         this.lightbulbService = new Service.Lightbulb(this.name);
         this.lightbulbService
@@ -190,6 +190,7 @@ this.log("test" + url);
   getHumidity (callback) {
     this.log('Getting Humidity...');
     var url = encodeURI(this.StatusURL + '&device='+ this.name);
+    url = encodeURI(this.URL + '?service=Humidity&device='+this.name+'&get=Humidity');
     //url = encodeURI(this.URL + )
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
@@ -459,27 +460,27 @@ var HeatingCoolingState;
         this.temperatureService
             .getCharacteristic(Characteristic.CurrentTemperature).getValue();
         break;
-        case "Switch":
-          this.switchService
-              .getCharacteristic(Characteristic.On)
-              .getValue();
+      case "Switch":
+        this.switchService
+            .getCharacteristic(Characteristic.On)
+            .getValue();
         break;
-      //case "Luftfeuchtigkeit":
-      //  this.humidityService
-      //      .getCharacteristic(Characteristic.CurrentRelativeHumidity)
-      //      .getValue();
-      //  break;
+      case "Luftfeuchtigkeit":
+        this.humidityService
+            .getCharacteristic(Characteristic.CurrentRelativeHumidity)
+            .getValue();
+        break;
       case "Licht":
-      this.lightbulbService
-          .getCharacteristic(Characteristic.On)
-          .getValue();
+        this.lightbulbService
+            .getCharacteristic(Characteristic.On)
+            .getValue();
         if (this.Brightness == true) {
           this.lightbulbService
               .getCharacteristic(Characteristic.Brightness)
               .getValue();
         }
         break;
-        case "Thermostat":
+      case "Thermostat":
         this.ThermostatService
             .getCharacteristic(Characteristic.CurrentTemperature)
             .getValue();
@@ -490,7 +491,6 @@ var HeatingCoolingState;
             .getCharacteristic(Characteristic.TargetTemperature)
             .getValue();
         break;
-
     }
   }
 
