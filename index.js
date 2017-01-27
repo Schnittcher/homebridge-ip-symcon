@@ -378,7 +378,7 @@ var HeatingCoolingState;
     }
     this.log('Setting Current Heating Cooling...'+ state);
     var url = encodeURI(this.SetURLThermostat + '&device='+ this.name + '&State=' +HeatingCoolingState);
-    url = encodeURI(this.URL + '?service=Thermostat&device='+this.name+'&set=HeatingCoolingState&value=' + HeatingCoolingState)
+    url = encodeURI(this.URL + '?service=Thermostat&device='+this.name+'&set=TargetHeatingCoolingState&value=' + HeatingCoolingState)
     this.log(url);
     this.httpRequest(url, '', 'GET', '', '', '', function (error, response, responseBody) {
       if (error) {
